@@ -132,20 +132,29 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public boolean onDoubleTap(MotionEvent event) {
-        handleDoubleTapGesture(event.getX(), event.getY());
+        final float x = event.getX(), y = event.getY();
+        queueEvent(new Runnable() {
+            public void run() {
+                handleDoubleTapGesture(x, y);
+            }
+        });
         return true;
     }
 
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, final float distanceX, final float distanceY) {
         // Only pan for scrolling events with just one pointer; otherwise vertical scrolling will
         // cause a simultaneous shove gesture
         if (e1.getPointerCount() == 1 && e2.getPointerCount() == 1) {
             // We flip the signs of distanceX and distanceY because onScroll provides the distances
             // by which the view being scrolled should move, while handlePanGesture expects the 
             // distances by which the touch point has moved on the screen (these are opposite)
-            float x = e2.getX();
-            float y = e2.getY();
-            handlePanGesture(x + distanceX, y + distanceY, x, y);
+            final float x = e2.getX();
+            final float y = e2.getY();
+            queueEvent(new Runnable() {
+                public void run() {
+                    handlePanGesture(x + distanceX, y + distanceY, x, y);
+                }
+            });
         }
         return true;
     }
@@ -164,7 +173,12 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public boolean onSingleTapUp(MotionEvent event) {
-        handleTapGesture(event.getX(), event.getY());
+        final float x = event.getX(), y = event.getY();
+        queueEvent(new Runnable() {
+            public void run() {
+                handleTapGesture(event.getX(), event.getY());
+            }
+        });
         return true;
     }
 
@@ -176,7 +190,13 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public boolean onScale(ScaleGestureDetector detector) {
-        handlePinchGesture(detector.getFocusX(), detector.getFocusY(), detector.getScaleFactor());
+        final float x = detector.getFocusX(), y = detector.getFocusY();
+        final float scale = detector.getScaleFactor();
+        queueEvent(new Runnable() {
+            public void run() {
+                handlePinchGesture(x, y, scale);
+            }
+        });
         return true;
     }
 
@@ -192,10 +212,13 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public boolean onRotate(RotateGestureDetector detector) {
-        float x = scaleGestureDetector.getFocusX();
-        float y = scaleGestureDetector.getFocusY();
-        float rotation = -detector.getRotationDegreesDelta() * (float)(Math.PI / 180);
-        handleRotateGesture(x, y, rotation);
+        final float x = scaleGestureDetector.getFocusX(), y = scaleGestureDetector.getFocusY();
+        final float rotation = -detector.getRotationDegreesDelta() * (float)(Math.PI / 180);
+        queueEvent(new Runnable() {
+            public void run() {
+                handleRotateGesture(x, y, rotation);
+            }
+        });
         return true;
     }
 
@@ -211,7 +234,12 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
     }
 
     public boolean onShove(ShoveGestureDetector detector) {
-        handleShoveGesture(detector.getShovePixelsDelta() / displayMetrics.heightPixels);
+        final float shove = detector.getShovePixelsDelta() / displayMetrics.heightPixels;
+        queueEvent(new Runnable() {
+            public void run() {
+                handleShoveGesture(shove);
+            }
+        });
         return true;
     }
 
