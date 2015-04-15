@@ -176,7 +176,7 @@ public class Tangram extends GLSurfaceView implements Renderer, OnScaleGestureLi
         final float x = event.getX(), y = event.getY();
         queueEvent(new Runnable() {
             public void run() {
-                handleTapGesture(event.getX(), event.getY());
+                handleTapGesture(x, y);
             }
         });
         return true;
