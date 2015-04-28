@@ -61,12 +61,15 @@ void LabelContainer::updateOcclusions() {
             }
         }
         
-        m_collisionWorker = std::unique_ptr<LabelWorker>(new LabelWorker());
-        m_collisionWorker->start(aabbs);
+        if (aabbs.size() > 0) {
+            m_collisionWorker = std::unique_ptr<LabelWorker>(new LabelWorker());
+            m_collisionWorker->start(aabbs);
+        }
         
     } else {
         
         if (m_collisionWorker->isReady()) {
+            
             std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> occlusions;
             auto aabbs = m_collisionWorker->getAABBs();
             auto pairs = m_collisionWorker->getResult();
@@ -94,16 +97,22 @@ void LabelContainer::updateOcclusions() {
                     pair.first->setVisible(false);
                 }
             }
+            
+            m_collisionWorker.reset();
         }
     }
 }
 
 void LabelWorker::start(const std::vector<isect2d::AABB> _aabbbs) {
+    m_aabbs = std_patch::make_unique<std::vector<isect2d::AABB>>(_aabbbs);
     
     m_pairs = std::async(std::launch::async, [&] {
-        auto pairs = intersect(_aabbbs);
+        
+        // broad phase collision detection
+        auto pairs = intersect(*m_aabbs);
         m_finished = true;
-        return pairs;
+        return std::move(pairs);
+        
     });
     
 }
@@ -111,7 +120,7 @@ void LabelWorker::start(const std::vector<isect2d::AABB> _aabbbs) {
 std::set<std::pair<int, int>> LabelWorker::getResult() {
     
     if (m_pairs.valid()) {
-        return std::move(m_pairs.get());
+        return m_pairs.get();
     } else {
         return std::set<std::pair<int, int>>();
     }
