@@ -41,45 +41,79 @@ const std::vector<std::shared_ptr<Label>>& LabelContainer::getLabels(const std::
 }
 
 void LabelContainer::updateOcclusions() {
-    std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> occlusions;
-    std::vector<isect2d::AABB> aabbs;
     
-    for (auto& styleTilepair : m_labels) {
-        std::string styleName = styleTilepair.first;
-        for (auto& tileLabelsPair : m_labels[styleName]) {
-            auto& labels = tileLabelsPair.second;
-            for(auto& label : labels) {
-                if (!label->isVisible() || label->isOutOfScreen() || label->getType() == Label::Type::DEBUG) {
+    if (!m_collisionWorker) {
+        std::vector<isect2d::AABB> aabbs;
+        
+        for (auto& styleTilepair : m_labels) {
+            std::string styleName = styleTilepair.first;
+            for (auto& tileLabelsPair : m_labels[styleName]) {
+                auto& labels = tileLabelsPair.second;
+                for(auto& label : labels) {
+                    if (!label->isVisible() || label->isOutOfScreen() || label->getType() == Label::Type::DEBUG) {
+                        continue;
+                    }
+                    
+                    isect2d::AABB aabb = label->getAABB();
+                    aabb.m_userData = (void*) &label;
+                    aabbs.push_back(aabb);
+                }
+            }
+        }
+        
+        m_collisionWorker = std::unique_ptr<LabelWorker>(new LabelWorker());
+        m_collisionWorker->start(aabbs);
+        
+    } else {
+        
+        if (m_collisionWorker->isReady()) {
+            std::set<std::pair<std::shared_ptr<Label>, std::shared_ptr<Label>>> occlusions;
+            auto aabbs = m_collisionWorker->getAABBs();
+            auto pairs = m_collisionWorker->getResult();
+            
+            for (auto pair : pairs) {
+                const auto& aabb1 = (*aabbs)[pair.first];
+                const auto& aabb2 = (*aabbs)[pair.second];
+                
+                auto l1 = *(std::shared_ptr<Label>*) aabb1.m_userData;
+                auto l2 = *(std::shared_ptr<Label>*) aabb2.m_userData;
+                
+                if (!l1 || !l2) {
                     continue;
                 }
                 
-                isect2d::AABB aabb = label->getAABB();
-                aabb.m_userData = (void*) &label;
-                aabbs.push_back(aabb);
+                // narrow phase
+                if (intersect(l1->getOBB(), l2->getOBB())) {
+                    occlusions.insert({ l1, l2 });
+                }
+            }
+            
+            // no priorities, only occlude one of the two occluded label
+            for (auto& pair : occlusions) {
+                if(pair.second->isVisible()) {
+                    pair.first->setVisible(false);
+                }
             }
         }
     }
+}
+
+void LabelWorker::start(const std::vector<isect2d::AABB> _aabbbs) {
     
-    // broad phase
-    auto pairs = intersect(aabbs);
+    m_pairs = std::async(std::launch::async, [&] {
+        auto pairs = intersect(_aabbbs);
+        m_finished = true;
+        return pairs;
+    });
     
-    for (auto pair : pairs) {
-        const auto& aabb1 = aabbs[pair.first];
-        const auto& aabb2 = aabbs[pair.second];
-        
-        auto l1 = *(std::shared_ptr<Label>*) aabb1.m_userData;
-        auto l2 = *(std::shared_ptr<Label>*) aabb2.m_userData;
-        
-        // narrow phase
-        if (intersect(l1->getOBB(), l2->getOBB())) {
-            occlusions.insert({ l1, l2 });
-        }
+}
+
+std::set<std::pair<int, int>> LabelWorker::getResult() {
+    
+    if (m_pairs.valid()) {
+        return std::move(m_pairs.get());
+    } else {
+        return std::set<std::pair<int, int>>();
     }
     
-    // no priorities, only occlude one of the two occluded label
-    for (auto& pair : occlusions) {
-        if(pair.second->isVisible()) {
-            pair.first->setVisible(false);
-        }
-    }
 }

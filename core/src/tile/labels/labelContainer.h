@@ -7,7 +7,26 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <future>
 #include <map>
+
+struct LabelWorker {
+    
+public:
+    LabelWorker() : m_finished(false) {}
+    ~LabelWorker() {}
+    
+    void abort();
+    void start(const std::vector<isect2d::AABB> _aabbbs);
+    std::set<std::pair<int, int>> getResult();
+    bool isReady() { return m_finished; }
+    std::unique_ptr<std::vector<isect2d::AABB>> getAABBs() { return std::move(m_aabbs); }
+    
+private:
+    bool m_finished;
+    std::unique_ptr<std::vector<isect2d::AABB>> m_aabbs;
+    std::future<std::set<std::pair<int, int>>> m_pairs;
+};
 
 class MapTile;
 
@@ -53,4 +72,5 @@ private:
     // reference to the <FontContext>
     std::shared_ptr<FontContext> m_ftContext;
 
+    std::unique_ptr<LabelWorker> m_collisionWorker;
 };
