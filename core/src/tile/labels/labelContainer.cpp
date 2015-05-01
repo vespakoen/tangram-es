@@ -11,10 +11,10 @@ bool LabelContainer::addLabel(const TileID& _tileID, const std::string& _styleNa
     auto currentBuffer = m_ftContext->getCurrentBuffer();
 
     if (currentBuffer) {
-        std::shared_ptr<Label> label(new Label(_transform, _text, currentBuffer, _type));
-        label->rasterize();
-        
-        m_labels[_styleName][_tileID].push_back(label);
+        auto& container = m_labels[_styleName][_tileID];
+
+        container.emplace_back(new Label(_transform, _text, currentBuffer, _type));
+        container.back()->rasterize();
 
         return true;
     } 
