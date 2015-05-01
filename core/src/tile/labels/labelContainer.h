@@ -9,6 +9,7 @@
 #include <set>
 #include <future>
 #include <map>
+#include <mutex>
 
 struct LabelWorker {
     
@@ -61,16 +62,21 @@ public:
     /* Returns a const list of labels for a <TileID> and a style name */
     const std::vector<std::shared_ptr<Label>>& getLabels(const std::string& _styleName, const TileID& _tileID);
     
+    const std::vector<std::shared_ptr<Label>>& getPendingLabels(const std::string& _styleName, const TileID& _tileID);
+    
     void updateOcclusions();
-
+    
 private:
 
     LabelContainer();
     // map of <Style>s containing all <Label>s by <TileID>s
     std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_labels;
+    std::map<std::string, std::map<TileID, std::vector<std::shared_ptr<Label>>>> m_pendingLabels;
 
     // reference to the <FontContext>
     std::shared_ptr<FontContext> m_ftContext;
 
     std::unique_ptr<LabelWorker> m_collisionWorker;
+
+    std::mutex m_mutex;
 };
