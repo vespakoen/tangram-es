@@ -8,6 +8,7 @@ Label::Label(LabelTransform _transform, std::string _text, std::shared_ptr<TextB
 
     m_id = m_buffer->genTextID();
     m_visible = true;
+    m_occlusionSolved = false;
     m_dirty = false;
 }
 
@@ -41,10 +42,12 @@ void Label::updateBBoxes() {
 void Label::pushTransform() {
     
     if (m_dirty) {
-        m_transform.m_alpha = !m_outOfScreen && m_visible ? 1.0 : 0.0;
-        
-        m_buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, m_transform.m_alpha);
-        m_dirty = false;
+        if (!m_visible || m_outOfScreen || !m_occlusionSolved) {
+            m_buffer->transformID(m_id, 0, 0, 0, 0);
+        } else {
+            m_buffer->transformID(m_id, m_transform.m_screenPosition.x, m_transform.m_screenPosition.y, m_transform.m_rotation, 1.0);
+            m_dirty = false;
+        }
     }
 
 }

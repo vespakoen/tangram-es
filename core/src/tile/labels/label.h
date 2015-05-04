@@ -58,7 +58,9 @@ public:
     void updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize);
     
     Type getType() const { return m_type; }
-
+    
+    void setOcclusionSolved() { m_occlusionSolved = true; }
+    
 private:
     
     void updateBBoxes();
@@ -79,5 +81,7 @@ private:
     
     float m_width;
     float m_height;
+    
+    bool m_occlusionSolved;
 
 };

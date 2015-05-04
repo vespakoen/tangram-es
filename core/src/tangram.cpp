@@ -159,9 +159,11 @@ namespace Tangram {
             m_view->update();
 
             m_tileManager->updateTileSet();
+            
+            auto labelContainer = LabelContainer::GetInstance();
 
             if (m_view->changedOnLastUpdate()) {
-                LabelContainer::GetInstance()->setViewProjectionMatrix(m_view->getViewProjectionMatrix());
+                labelContainer->setViewProjectionMatrix(m_view->getViewProjectionMatrix());
                 
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
@@ -179,7 +181,7 @@ namespace Tangram {
                 }
                 
                 // manage occlusions
-                LabelContainer::GetInstance()->updateOcclusions();
+                labelContainer->updateOcclusions();
                 
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {

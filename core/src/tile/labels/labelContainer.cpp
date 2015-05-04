@@ -50,6 +50,7 @@ void LabelContainer::removeLabels(const TileID& _tileID) {
             for (auto& tileLabelsPair : m_labels[styleName]) {
                 const TileID& tileID = tileLabelsPair.first;
                 if (tileID == _tileID) {
+                    // FIXME : concurrent delete
                     m_labels[styleName][tileID].clear();
                     
                     {
@@ -67,28 +68,29 @@ const std::vector<std::shared_ptr<Label>>& LabelContainer::getLabels(const std::
 }
 
 void LabelContainer::updateOcclusions() {
-    
-    // merge pending labels from threads
-    for (auto& styleTilepair : m_pendingLabels) {
-        std::string styleName = styleTilepair.first;
-        
-        for (auto& tileLabelsPair : m_pendingLabels[styleName]) {
-            const TileID& tileID = tileLabelsPair.first;
-            auto& pendingLabels = m_pendingLabels[styleName][tileID];
-            auto& labels = m_labels[styleName][tileID];
-            
-            for (auto& label : pendingLabels) {
-                labels.emplace_back(new Label(label));
-            }
-            
-            {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                pendingLabels.clear();
-            }
-        }
-    }
 
     if (!m_collisionWorker) {
+        
+        // merge pending labels from threads
+        for (auto& styleTilepair : m_pendingLabels) {
+            std::string styleName = styleTilepair.first;
+            
+            for (auto& tileLabelsPair : m_pendingLabels[styleName]) {
+                const TileID& tileID = tileLabelsPair.first;
+                auto& pendingLabels = m_pendingLabels[styleName][tileID];
+                auto& labels = m_labels[styleName][tileID];
+                
+                for (auto& label : pendingLabels) {
+                    labels.emplace_back(new Label(label));
+                }
+                
+                {
+                    std::lock_guard<std::mutex> lock(m_mutex);
+                    pendingLabels.clear();
+                }
+            }
+        }
+
         std::vector<isect2d::AABB> aabbs;
         
         for (auto& styleTilepair : m_labels) {
@@ -98,12 +100,13 @@ void LabelContainer::updateOcclusions() {
                 auto& labels = tileLabelsPair.second;
                 
                 for (auto& label : labels) {
-                    if (label->getType() == Label::Type::DEBUG) {
+                    if (!label->isVisible() || label->getType() == Label::Type::DEBUG) {
                         continue;
                     }
                     
                     isect2d::AABB aabb = label->getAABB();
-                    // make sure pointer is retained, deleted in the worker destructor
+                    
+                    // make sure pointer is retained
                     aabb.m_userData = (void*) new std::shared_ptr<Label>(label);
                     aabbs.push_back(aabb);
                 }
@@ -138,7 +141,7 @@ void LabelContainer::updateOcclusions() {
             
             // no priorities, only occlude one of the two occluded label
             for (auto& pair : occlusions) {
-                if(pair.second->isVisible()) {
+                if (pair.second->isVisible()) {
                     pair.first->setVisible(false);
                 }
             }
@@ -146,6 +149,19 @@ void LabelContainer::updateOcclusions() {
             for (auto& aabb : *aabbs) {
                 auto label = static_cast<std::shared_ptr<Label>*>(aabb.m_userData);
                 delete label;
+            }
+            
+            // indicate that occlusions have been solved
+            for (auto& styleTilepair : m_labels) {
+                std::string styleName = styleTilepair.first;
+                
+                for (auto& tileLabelsPair : m_labels[styleName]) {
+                    auto& labels = tileLabelsPair.second;
+                    
+                    for (auto& label : labels) {
+                        label->setOcclusionSolved();
+                    }
+                }
             }
             
             m_collisionWorker.reset();
