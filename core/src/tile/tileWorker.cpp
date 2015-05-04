@@ -55,8 +55,6 @@ void TileWorker::load(const TileID &_tile,
                 if (tileData) {
                     style->addData(*tileData, *tile, _view.getMapProjection());
                 }
-
-                tile->updateLabels(0, *style, _view, true);
             }
         }
         

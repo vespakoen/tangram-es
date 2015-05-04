@@ -45,6 +45,8 @@ public:
     
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
+    
+    const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
 
     /* Adds drawable geometry to the tile and associates it with a <Style>
      * 
@@ -62,7 +64,7 @@ public:
     void update(float _dt, const View& _view);
 
     /* Update labels position considering the tile transform */
-    void updateLabels(float _dt, const Style& _style, const View& _view, bool _pendingLabels = false);
+    void updateLabels(float _dt, const Style& _style, const View& _view);
     
     /* Push the label transforms to the font rendering context */
     void pushLabelTransforms(const Style& _style);
