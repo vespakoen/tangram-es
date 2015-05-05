@@ -1,10 +1,6 @@
 #include "labelContainer.h"
 #include "tile/mapTile.h"
 
-#include <iostream>
-#include <chrono>
-#include <thread>
-
 LabelContainer::LabelContainer() {}
 
 LabelContainer::~LabelContainer() {
