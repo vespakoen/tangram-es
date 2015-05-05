@@ -144,7 +144,7 @@ namespace Tangram {
         
         if (m_ftContext) {
             m_ftContext->setScreenSize(m_view->getWidth(), m_view->getHeight());
-            LabelContainer::GetInstance()->setScreenSize(m_view->getWidth(), m_view->getHeight());
+            m_labelContainer->setScreenSize(m_view->getWidth(), m_view->getHeight());
         }
 
         while (Error::hadGlError("Tangram::resize()")) {}
@@ -159,11 +159,9 @@ namespace Tangram {
             m_view->update();
 
             m_tileManager->updateTileSet();
-            
-            auto labelContainer = LabelContainer::GetInstance();
-
+        
             if (m_view->changedOnLastUpdate()) {
-                labelContainer->setViewProjectionMatrix(m_view->getViewProjectionMatrix());
+                m_labelContainer->setViewProjectionMatrix(m_view->getViewProjectionMatrix());
                 
                 for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
                     const std::shared_ptr<MapTile>& tile = mapIDandTile.second;
@@ -171,7 +169,7 @@ namespace Tangram {
                 }
             }
 
-            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
+            if(m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged() || m_labelContainer->occlusionSolved()) {
                 // update labels for specific style
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {
@@ -181,7 +179,7 @@ namespace Tangram {
                 }
                 
                 // manage occlusions
-                labelContainer->updateOcclusions();
+                m_labelContainer->updateOcclusions();
                 
                 for (const auto& style : m_scene->getStyles()) {
                     for (const auto& mapIDandTile : m_tileManager->getVisibleTiles()) {

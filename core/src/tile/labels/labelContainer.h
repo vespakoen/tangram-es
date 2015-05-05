@@ -15,18 +15,27 @@
 struct LabelWorker {
     
 public:
+    
     LabelWorker() : m_finished(false) {}
     ~LabelWorker() {}
     
     void start(const std::vector<isect2d::AABB> _aabbbs);
     std::set<std::pair<int, int>> getResult();
+    
+    /* Checks whether the worker has finished running */
     bool isReady() { return m_finished; }
-    std::unique_ptr<std::vector<isect2d::AABB>> getAABBs() { return std::move(m_aabbs); }
+    
+    /* Get the aabbs on which the worker has started working */
+    std::unique_ptr<std::vector<isect2d::AABB>> getAABBs();
     
 private:
+    
     bool m_finished;
     std::unique_ptr<std::vector<isect2d::AABB>> m_aabbs;
+    
+    // The worker result (set of paris representing indices inside the m_aabbs collection)
     std::future<std::set<std::pair<int, int>>> m_pairs;
+    
 };
 
 class MapTile;
@@ -67,6 +76,8 @@ public:
     void setViewProjectionMatrix(glm::mat4 _viewProjection) { m_viewProjection = _viewProjection; }
     
     void setScreenSize(int _width, int _height) { m_screenSize = glm::vec2(_width, _height); }
+    
+    bool occlusionSolved() const { return m_collisionWorker && m_collisionWorker->isReady(); }
     
 private:
 
