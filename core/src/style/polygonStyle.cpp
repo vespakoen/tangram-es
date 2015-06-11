@@ -83,6 +83,8 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Propert
         }
         Builders::buildPolygonExtrusion(_polygon, minHeight, output);
     }
+
+    size_t t = points.size();
     
     Builders::buildPolygon(_polygon, output);
     
@@ -90,6 +92,7 @@ void PolygonStyle::buildPolygon(Polygon& _polygon, StyleParams& _params, Propert
         glm::vec3 p = points[i];
         glm::vec3 n = normals[i];
         glm::vec2 u = texcoords[i];
+        if (i >= t) { p.z = height; }
         vertices.push_back({ p.x, p.y, p.z, n.x, n.y, n.z, u.x, u.y, abgr, layer });
     }
     

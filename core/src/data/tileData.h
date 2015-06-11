@@ -57,11 +57,11 @@ enum GeometryType {
     POLYGONS
 };
 
-typedef glm::vec3 Point;
+using Point = glm::vec3;
 
-typedef std::vector<Point> Line;
+using Line = std::vector<Point>;
 
-typedef std::vector<Line> Polygon;
+using Polygon = std::vector<Line>;
 
 struct Properties {
     
