@@ -38,7 +38,6 @@ private:
     bool m_finished;
     
     TileTask m_task;
-    //std::future< std::shared_ptr<MapTile> > m_future;
     std::future<bool> m_future;
 };
 
