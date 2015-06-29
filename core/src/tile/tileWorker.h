@@ -3,41 +3,32 @@
 #include <memory>
 #include <future>
 
-#include "util/tileID.h"
-#include "data/dataSource.h"
 #include "style/style.h"
-#include "mapTile.h"
-#include "tileTask.h"
+
+class TileManager;
+
 
 class TileWorker {
     
 public:
     
-    TileWorker();
+    TileWorker(TileManager& _tileManager);
     
-    void processTileData(TileTask _task,
-                         const StyleSet& _styles,
-                         const View& _view);
+    void process(const StyleSet& _styles);
     
     void abort();
     
-    bool isFinished() const { return m_finished; }
+    bool isRunning() const { return m_running; }
 
-    bool isFree() const { return m_free; }
-
-    // FIXME what if no task is set?
-    const TileID& getTileID() const { return m_task->tileID; }
-    
-    std::shared_ptr<MapTile> getTileResult();
     void drain();
     
 private:
     
-    bool m_free;
-    bool m_aborted;
-    bool m_finished;
+    TileManager& m_tileManager;
     
-    TileTask m_task;
+    bool m_aborted;
+    bool m_running;
+    
     std::future<bool> m_future;
 };
 

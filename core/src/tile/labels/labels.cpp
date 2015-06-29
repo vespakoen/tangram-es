@@ -29,7 +29,9 @@ bool Labels::addLabel(MapTile& _tile, const std::string& _styleName, Label::Tran
             return false;
         }
 
-        l->update(m_view->getViewProjectionMatrix() * _tile.getModelMatrix(), m_screenSize, 0);
+        // FIXME: addLabel is called on worker thread: getModelMatrix() depends on the current view
+        // which does provide kind of arbitrary values here.
+        // l->update(m_view->getViewProjectionMatrix() * _tile.getModelMatrix(), m_screenSize, 0);
         std::unique_ptr<TileID> tileID(new TileID(_tile.getID()));
         _tile.addLabel(_styleName, l);
 
