@@ -27,10 +27,9 @@ class View;
 class MapTile {
 
 public:
-    
+  
     MapTile(TileID _id, const MapProjection& _projection);
 
-    MapTile(MapTile&& _other); 
 
     virtual ~MapTile();
 
@@ -91,7 +90,7 @@ public:
     void resetProxyCounter() { m_proxyCounter = 0; }
 
     enum ProxyID {
-      None = 0,
+      NoProxies = 0,
       Child1 = 1 << 0,
       Child2 = 1 << 1,
       Child3 = 1 << 2,
@@ -112,9 +111,25 @@ public:
       return false;
     }
 
+    enum State {
+      None,
+      Loading,
+      Processing,
+      Ready,
+      Canceled
+    };
+    
+    void setState(State state) {
+      m_state = state;
+    }
+
+    State state() {
+      return m_state;
+    }
+
 private:
 
-    TileID m_id;
+    const TileID m_id;
     
     /*
      * A Counter for number of tiles this tile acts a proxy for
@@ -123,6 +138,8 @@ private:
 
     uint8_t m_proxies = 0;
 
+    State m_state = None;
+  
     const MapProjection* m_projection = nullptr;
     
     float m_scale = 1;
