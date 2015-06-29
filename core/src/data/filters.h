@@ -125,14 +125,14 @@ namespace Tangram {
             auto ctxIt = ctx.find(key);
             if (ctxIt != ctx.end()) {
                 if (typeid(float) == ctxIt->second.type()) {
-                    float val = core::get<1>(ctxIt->second);
+                    float val = ctxIt->second.get<1>();
                     return val >= min && val < max;
                 }
             }
             auto numIt = feat.props.find(key);
             if (numIt != feat.props.end()) {
                 if (typeid(float) == numIt->second.type()) {
-                    float num = core::get<1>(numIt->second);
+                    float num = numIt->second.get<1>();
                     return num >= min && num < max;
                 }
             }

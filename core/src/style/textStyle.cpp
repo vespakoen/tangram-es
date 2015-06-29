@@ -63,7 +63,7 @@ void TextStyle::buildPoint(Point& _point, void* _styleParams, Properties& _props
         if (prop.first == TAG_KEY_NAME) {
             m_labels->addLabel(*TextStyle::s_processedTile, m_name,
                                { glm::vec2(_point), glm::vec2(_point) },
-                               core::get<0>(prop.second), Label::Type::POINT);
+                               prop.second.get<0>(), Label::Type::POINT);
         }
     }
 }
@@ -88,7 +88,7 @@ void TextStyle::buildLine(Line& _line, void* _styleParams, Properties& _props, V
                 }
                 
                 m_labels->addLabel(*TextStyle::s_processedTile, m_name,
-                                   { p1, p2 }, core::get<0>(prop.second), Label::Type::LINE);
+                                   { p1, p2 }, prop.second.get<0>(), Label::Type::LINE);
             }
         }
     }
@@ -112,7 +112,7 @@ void TextStyle::buildPolygon(Polygon& _polygon, void* _styleParams, Properties& 
         if (prop.first == TAG_KEY_NAME) {
             m_labels->addLabel(*TextStyle::s_processedTile, m_name,
                                { glm::vec2(centroid), glm::vec2(centroid) },
-                               core::get<0>(prop.second), Label::Type::POINT);
+                               prop.second.get<0>(), Label::Type::POINT);
         }
     }
 }

@@ -95,7 +95,7 @@ class Props {
     if(it == _props.end())
       return _fallback;
     
-    auto* result = core::get<0>(&it->second);
+    auto* result = &it->second.get<0>();
     if (!result)
       return _fallback;
 
@@ -107,8 +107,7 @@ class Props {
     if(it == _props.end())
       return _fallback;
     
-    auto* result = core::get<1>(&it->second);
-
+    auto* result = &it->second.get<1>();
     if (!result)
       return _fallback;
 
